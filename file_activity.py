@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import os.path
 from dotenv import load_dotenv
-
+from tabulate import *
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -52,8 +52,8 @@ def main():
         #     pageSize=10, fields="nextPageToken, files(id, name)").execute()
         # items = results.get('files', [])
         # fileId = ""
-        getActivity()
-        # getSpreadsheetInfo("Sheet1")
+        # getActivity()
+        getSpreadsheetInfo("Things to Do")
         # updateSpreadsheetInfo("Sheet1")
         # response = serviceDrive.permissions().list(fileId = "").execute()
         # print(response)
@@ -83,17 +83,29 @@ def updateSpreadsheetInfo(sheetname):
             "updateCells": {
                 "range": {
                     "sheetId": 0,
-                    "startRowIndex": 2,
+                    "startRowIndex": 0,
                     "endRowIndex": 3,
-                    "startColumnIndex": 1,
-                    "endColumnIndex": 2
+                    "startColumnIndex": 0,
+                    "endColumnIndex": 3
                 },
                 "rows": [
                     {
                         "values": [
                             {
                                 "userEnteredValue": {
-                                    "stringValue": "1"
+                                    "stringValue": "update0"
+                                }
+                                
+                            },
+                            {
+                                "userEnteredValue": {
+                                    "stringValue": "update0-1"
+                                }
+                                
+                            },
+                            {
+                                "userEnteredValue": {
+                                    "stringValue": "update0-2"
                                 }
                                 
                             }
@@ -118,7 +130,7 @@ def updateSpreadsheetInfo(sheetname):
 def getSpreadsheetInfo(sheetname):
     try:
         serviceSheet = build('sheets', 'v4', credentials=creds)
-        RANGE = f"{sheetname}!A:K"
+        RANGE = f"{sheetname}!A:G"
         # Call the Sheets API
         sheet = serviceSheet.spreadsheets()
         # print(sheet.get(spreadsheetId="").execute())
@@ -126,16 +138,19 @@ def getSpreadsheetInfo(sheetname):
         result = sheet.values().get(spreadsheetId=EVERYTHING_FILE,
                                     range=RANGE).execute()
         values = result.get('values', [])
+        print(tabulate(values))
 
+        for value in values:
+            print("row: ", value)
+
+        print(values)
         if not values:
             print('No data found.')
             return
 
    
-        print(values)
-        for row in values:
-            # Print columns A and E, which correspond to indices 0 and 4.
-            print(row)
+        # print(tabulate(values))
+        
         return values
     except HttpError as err:
         print(err)

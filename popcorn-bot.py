@@ -1,7 +1,8 @@
 import discord
 import os
 from dotenv import load_dotenv
-
+from tabulate import tabulate
+from table2ascii import table2ascii as t2a, PresetStyle
 from file_activity import *
 
 load_dotenv()
@@ -47,8 +48,18 @@ async def on_message(message):
     if user_msg.lower() == "!pb things to do":
         thingsToDo = getSpreadsheetInfo("Things to Do")
         # print(thingsToDo)
-        for things in thingsToDo:
-            await message.channel.send(f"{things}")
+        headers = thingsToDo[2]
+        values = [thingsToDo[3:]]
+        output = t2a(
+            header=headers,
+            body=values,
+            style=PresetStyle.thin_compact
+        )
+
+
+        await message.channel.send(f"```\n{output}\n```")
+        # for things in thingsToDo:
+        #     await message.channel.send(f"{things}")
         return
     
     if user_msg.lower() == "!pb places to eat":
