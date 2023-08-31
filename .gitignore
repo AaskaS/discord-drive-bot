@@ -164,3 +164,7 @@ credentials.json
 secrets.json
 global-token.json
 .env
+
+# misc
+content-movies.txt
+content-shows.txt

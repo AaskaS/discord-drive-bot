@@ -3,6 +3,7 @@ import os
 import os.path
 from dotenv import load_dotenv
 from tabulate import *
+from table2ascii import table2ascii as t2a, PresetStyle
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -18,7 +19,8 @@ PERSON = os.getenv("PERSON")
 BOTFILE = os.getenv("BOTSHEET")
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/contacts.readonly','https://www.googleapis.com/auth/drive.metadata.readonly', 'https://www.googleapis.com/auth/drive.activity.readonly']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/contacts.readonly',
+          'https://www.googleapis.com/auth/drive.metadata.readonly', 'https://www.googleapis.com/auth/drive.activity.readonly']
 
 
 """Shows basic usage of the People API.
@@ -46,7 +48,7 @@ if not creds or not creds.valid:
 def main():
     try:
         serviceDrive = build('drive', 'v3', credentials=creds)
-        
+
         # Call the Drive v3 API
         # results = service.files().list(
         #     pageSize=10, fields="nextPageToken, files(id, name)").execute()
@@ -61,19 +63,21 @@ def main():
         #     print('No files found.')
         #     return
         # print('Files:')
-        
+
         # for item in items:
         #     print(item)
-            # print(u'{0} ({1})'.format(item['name'], item['id']))
+        # print(u'{0} ({1})'.format(item['name'], item['id']))
     except HttpError as error:
         # TODO(developer) - Handle errors from drive API.
         print(f'An error occurred: {error}')
 
+
 def updateSpreadsheetInfo(sheetname):
     try:
+
         serviceSheet = build('sheets', 'v4', credentials=creds)
         sheet = serviceSheet.spreadsheets()
-        
+
         RANGE = f"{sheetname}!A:K"
         # SAMPLE_RANGE_NAME = "Things to Do!A:"
         # SAMPLE_SPREADSHEET_ID = ''
@@ -95,19 +99,19 @@ def updateSpreadsheetInfo(sheetname):
                                 "userEnteredValue": {
                                     "stringValue": "update0"
                                 }
-                                
+
                             },
                             {
                                 "userEnteredValue": {
                                     "stringValue": "update0-1"
                                 }
-                                
+
                             },
                             {
                                 "userEnteredValue": {
                                     "stringValue": "update0-2"
                                 }
-                                
+
                             }
                         ]
                     }
@@ -116,17 +120,18 @@ def updateSpreadsheetInfo(sheetname):
             }
         }
 
-        result = sheet.batchUpdate(spreadsheetId=BOTFILE, body={"requests": [setNote]}).execute()
+        result = sheet.batchUpdate(spreadsheetId=BOTFILE, body={
+                                   "requests": [setNote]}).execute()
         # jsonValues = {"sheetId": sheetname,"Sheel1": [{"values": [4,5,6]}] ,"fields": "StringValue"}
         # sheet = serviceSheet.spreadsheets()
         # result = sheet.values.batchUpdate(spreadsheetId=EVERYTHINGSHEET, requests = [{"appendCells": jsonValues}]).execute()
 
         return result
-        
-        
+
     except HttpError as err:
         print(err)
-    
+
+
 def getSpreadsheetInfo(sheetname):
     try:
         serviceSheet = build('sheets', 'v4', credentials=creds)
@@ -138,19 +143,36 @@ def getSpreadsheetInfo(sheetname):
         result = sheet.values().get(spreadsheetId=EVERYTHING_FILE,
                                     range=RANGE).execute()
         values = result.get('values', [])
-        print(tabulate(values))
+        # print(tabulate(values))
 
-        for value in values:
-            print("row: ", value)
+        # for value in values:
+        #     print("row: ", value)
 
-        print(values)
+        # headers = values[2]
+        # data = values[3:]
+
+        # for header in range(0, len(headers)):
+        #     if headers[header] == "":
+        #         headers[header] = None
+
+        # for line in data:
+        #     for value in range(0, len(line)):
+        #         if line[value] == "":
+        #             line[value] = None
+        # data[-1].append(None)
+        # print(headers)
+        # print(data)
+        # output = t2a(
+        #     header=headers,
+        #     body=data,
+        #     style=PresetStyle.thin_compact
+        # )
         if not values:
             print('No data found.')
             return
 
-   
         # print(tabulate(values))
-        
+
         return values
     except HttpError as err:
         print(err)
@@ -158,7 +180,6 @@ def getSpreadsheetInfo(sheetname):
 
 def getActivity():
 
-    
     # Call the Drive Activity API
     try:
 
@@ -171,7 +192,7 @@ def getActivity():
         if not activities:
             print('No activity.')
         else:
-      
+
             print('Recent activity:')
             # print(activities)
             # for activity in activities:
@@ -188,7 +209,8 @@ def getActivity():
                 # print(target_name)
 
                 # Print the action occurred on drive with actor, target item and timestamp
-                print(u'{0}: {1}, {2}, {3}'.format(time, action, actor_name, target_name))
+                print(u'{0}: {1}, {2}, {3}'.format(
+                    time, action, actor_name, target_name))
 
         return activities
 
@@ -198,7 +220,7 @@ def getActivity():
 
 
 def getUserName(id):
-    
+
     try:
         if id == PERSON_ID:
             return PERSON
@@ -206,14 +228,13 @@ def getUserName(id):
             return ME
         else:
             servicePeople = build('people', 'v1', credentials=creds, )
-            response = servicePeople.people().get(resourceName = id, personFields="names").execute()
+            response = servicePeople.people().get(
+                resourceName=id, personFields="names").execute()
             # print(response.get("names")[0]["displayName"])
             return response.get("names")[0]["displayName"]
-    
+
     except HttpError as err:
         print(err)
-
-    
 
 
 # Returns the name of a set property in an object, or else "unknown".
@@ -270,7 +291,6 @@ def getTargetInfo(target):
         title = parent.get('title', 'unknown')
         return 'fileComment:"{0}"'.format(title)
     return '{0}:unknown'.format(getOneOf(target))
-
 
 
 if __name__ == '__main__':

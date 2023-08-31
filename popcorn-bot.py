@@ -13,6 +13,7 @@ intents.message_content = True
 
 client = discord.Client(intents=intents)
 
+
 @client.event
 async def on_ready():
     print("We have logged in as {0.user}".format(client))
@@ -30,43 +31,72 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-
     if user_msg.lower() == "!commands":
         await message.channel.send(f"\
-             !hello: Greetings message\
-             \n!bye: Farewell message\
-             \n!pb get activity: Returns 4 of the latest changes to the 'Everything Sheet' \
-             \n!pb Things to Do: Returns contents of the 'Things to Do' sheet\
-             \n!pb Places to Eat: Returns contents of the 'Places to Eat' sheet")
+             `!hello`: Greetings message\
+             \n`!bye`: Farewell message\
+             \n`!pb get activity`: Returns 4 of the latest changes to the 'Everything Sheet' \
+             \n`!pb Things to Do`: Returns contents of the 'Things to Do' sheet\
+             \n`!pb Places to Eat`: Returns contents of the 'Places to Eat' sheet\
+             \n`!movies`: Outputs all the movies on Aaska's list\
+             \n`!shows`: Outputs all the tv-show on Aaska's list")
 
         return
-    
+
+    if user_msg.lower() == "!movies":
+        with open('content-movies.txt', 'r') as f:
+            content = f.read()
+            await message.channel.send(f"```\n{content}\n```")
+        return
+
+    if user_msg.lower() == "!shows":
+        with open('content-shows.txt', 'r') as f:
+            content = f.read()
+            await message.channel.send(f"```\n{content}\n```")
+        return
+
     if user_msg.lower() == "!hello":
         await message.channel.send(f"Hello {username}")
         return
 
     if user_msg.lower() == "!pb things to do":
         thingsToDo = getSpreadsheetInfo("Things to Do")
-        # print(thingsToDo)
         headers = thingsToDo[2]
-        values = [thingsToDo[3:]]
+        data = thingsToDo[3:]
+
+        for header in range(0, len(headers)):
+            if headers[header] == "":
+                headers[header] = "-"
+
+        for line in data:
+            for value in range(0, len(line)):
+                if line[value] == "":
+                    line[value] = "-"
+        data[-1].append("-")
+
         output = t2a(
             header=headers,
-            body=values,
-            style=PresetStyle.thin_compact
+            body=data,
+            style=PresetStyle.thin_compact,
+            first_col_heading=True
         )
-
 
         await message.channel.send(f"```\n{output}\n```")
         # for things in thingsToDo:
         #     await message.channel.send(f"{things}")
         return
-    
+
     if user_msg.lower() == "!pb places to eat":
         placesToEat = getSpreadsheetInfo("Places to Eat")
-        for places in placesToEat:
-            await message.channel.send(f"{places}")
 
+        output = t2a(
+            header=placesToEat[0],
+            body=placesToEat[1:],
+            style=PresetStyle.thin_compact
+        )
+        # for places in placesToEat:
+        #     await message.channel.send(f"{places}")
+        await message.channel.send(f"```\n{output}\n```")
         return
 
     if user_msg.lower() == "!pb get activity":
